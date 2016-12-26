@@ -1,2 +1,3 @@
-# tensorflow
-* tensorflow implementing practice
+# Tensorflow
+# Tensorflow implementing practice
+* word2vec
