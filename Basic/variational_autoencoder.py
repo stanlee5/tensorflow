@@ -3,6 +3,8 @@ import time as T
 import tensorflow as tf
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 # raw.githubusercontent.com/tensorflow/tensorflow/master/tensorflow/examples/tutorials/mnist/input_data.py
 import input_data
 mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
@@ -166,7 +168,7 @@ class VariationalAutoencoder(object):
 
 
 def train(network_architecture, learning_rate=0.001,
-          batch_size=100, training_epochs=10, display_step=3):
+          batch_size=100, training_epochs=10, display_step=5):
     vae = VariationalAutoencoder(network_architecture,
                                  learning_rate=learning_rate,
                                  batch_size=batch_size)
@@ -181,7 +183,7 @@ def train(network_architecture, learning_rate=0.001,
             cost = vae.partial_fit(batch_xs)
             avg_cost += cost / n_samples * batch_size
 
-        if epoch % display_step == 0:
+        if (epoch+1) % display_step == 0:
             print("Epoch:", '%04d' % (epoch+1),
                   "Cost=", "{:.9f}".format(avg_cost), strTime())
     return vae
@@ -192,5 +194,23 @@ network_architecture = dict(n_hidden_recog_1=500,
                             n_hidden_gener_2=500,
                             n_input=784,    # 28*28
                             n_z=32)
+vae = train(network_architecture, training_epochs=50, display_step=5)
 
-vae = train(network_architecture, training_epochs=500)
+
+def show_testImage(vae):
+    x_sample = mnist.test.next_batch(100)[0]
+    x_reconstruct = vae.reconstruct(x_sample)
+    plt.figure(figsize=(8,12))
+    for i in range(5):
+        plt.subplot(5, 2, 2*i+1)
+        plt.imshow(x_sample[i].reshape(28,28), vmin=0, vmax=1, cmap="gray")
+        plt.title("VAE input")
+        plt.colorbar()
+        plt.subplot(5, 2, 2*i+2)
+        plt.imshow(x_reconstruct[i].reshape(28,28), vmin=0, vmax=1, cmap="gray")
+        plt.title("Reconstruction")
+        plt.colorbar()
+    plt.tight_layout()
+    plt.show()
+
+show_testImage(vae)
