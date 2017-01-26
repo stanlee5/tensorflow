@@ -219,7 +219,7 @@ def show_latent(vae):
     plt.show()
 
 
-def show_continuous(vae):
+def show_continuous(vae, vae2d):
     nx = ny = 20
     x_values = np.linspace(-3, 3, nx)
     y_values = np.linspace(-3, 3, ny)
@@ -228,7 +228,7 @@ def show_continuous(vae):
     for i, yi in enumerate(x_values):
         for j, xi in enumerate(y_values):
             z_mu = np.array([[xi, yi]]*vae.batch_size)
-            x_mean = vae.generate(z_mu)
+            x_mean = vae2d.generate(z_mu)
             canvas[(nx-i-1)*28:(nx-i)*28, j*28:(j+1)*28] = x_mean[0].reshape(28,28)
     plt.figure(figsize=(8,10))
     xi, yi = np.meshgrid(x_values, y_values)
@@ -243,7 +243,7 @@ network_architecture = dict(n_hidden_recog_1=500,
                             n_input=784,    # 28*28
                             n_z=64)
 
-vae = train(network_architecture, training_epochs=20)
+vae = train(network_architecture, training_epochs=10)
 
 network_architecture_2d = dict(n_hidden_recog_1=500,
                             n_hidden_recog_2=500,
@@ -251,11 +251,11 @@ network_architecture_2d = dict(n_hidden_recog_1=500,
                             n_hidden_gener_2=500,
                             n_input=784,    # 28*28
                             n_z=2)
-vae2d = train(network_architecture_2d, training_epochs=1)
+vae2d = train(network_architecture_2d, training_epochs=10)
 
 
 
 #show_testImage(vae=vae)
 #show_latent(vae=vae2d)
-show_continuous(vae=vae)
+show_continuous(vae=vae, vae2d=vae2d)
 
