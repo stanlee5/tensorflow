@@ -3,10 +3,13 @@ import time as T
 import tensorflow as tf
 import numpy as np
 
+#%matplotlib inline
 import matplotlib.pyplot as plt
 
 # raw.githubusercontent.com/tensorflow/tensorflow/master/tensorflow/examples/tutorials/mnist/input_data.py
 import input_data
+from numpy.distutils.misc_util import yellow_text
+
 mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
 n_samples = mnist.train.num_examples
 
@@ -183,18 +186,11 @@ def train(network_architecture, learning_rate=0.001,
             cost = vae.partial_fit(batch_xs)
             avg_cost += cost / n_samples * batch_size
 
-        if (epoch+1) % display_step == 0:
+        if epoch % display_step == 0:
             print("Epoch:", '%04d' % (epoch+1),
                   "Cost=", "{:.9f}".format(avg_cost), strTime())
     return vae
 
-network_architecture = dict(n_hidden_recog_1=500,
-                            n_hidden_recog_2=500,
-                            n_hidden_gener_1=500,
-                            n_hidden_gener_2=500,
-                            n_input=784,    # 28*28
-                            n_z=32)
-vae = train(network_architecture, training_epochs=50, display_step=5)
 
 
 def show_testImage(vae):
@@ -213,4 +209,53 @@ def show_testImage(vae):
     plt.tight_layout()
     plt.show()
 
-show_testImage(vae)
+def show_latent(vae):
+    x_sample, y_sample = mnist.test.next_batch(5000)
+    z_mu = vae.transform(x_sample)
+    plt.figure(figsize=(8,6))
+    plt.scatter(z_mu[:, 0], z_mu[:, 1], c=np.argmax(y_sample, 1))
+    plt.colorbar()
+    plt.grid()
+    plt.show()
+
+
+def show_continuous(vae):
+    nx = ny = 20
+    x_values = np.linspace(-3, 3, nx)
+    y_values = np.linspace(-3, 3, ny)
+
+    canvas = np.empty((28*ny, 28*nx))
+    for i, yi in enumerate(x_values):
+        for j, xi in enumerate(y_values):
+            z_mu = np.array([[xi, yi]]*vae.batch_size)
+            x_mean = vae.generate(z_mu)
+            canvas[(nx-i-1)*28:(nx-i)*28, j*28:(j+1)*28] = x_mean[0].reshape(28,28)
+    plt.figure(figsize=(8,10))
+    xi, yi = np.meshgrid(x_values, y_values)
+    plt.imshow(canvas, orgin="upper", cmap="gray")
+    plt.tight_layout()
+    plt.show()
+
+network_architecture = dict(n_hidden_recog_1=500,
+                            n_hidden_recog_2=500,
+                            n_hidden_gener_1=500,
+                            n_hidden_gener_2=500,
+                            n_input=784,    # 28*28
+                            n_z=64)
+
+vae = train(network_architecture, training_epochs=20)
+
+network_architecture_2d = dict(n_hidden_recog_1=500,
+                            n_hidden_recog_2=500,
+                            n_hidden_gener_1=500,
+                            n_hidden_gener_2=500,
+                            n_input=784,    # 28*28
+                            n_z=2)
+vae2d = train(network_architecture_2d, training_epochs=1)
+
+
+
+#show_testImage(vae=vae)
+#show_latent(vae=vae2d)
+show_continuous(vae=vae)
+
