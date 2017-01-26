@@ -232,7 +232,7 @@ def show_continuous(vae, vae2d):
             canvas[(nx-i-1)*28:(nx-i)*28, j*28:(j+1)*28] = x_mean[0].reshape(28,28)
     plt.figure(figsize=(8,10))
     xi, yi = np.meshgrid(x_values, y_values)
-    plt.imshow(canvas, orgin="upper", cmap="gray")
+    plt.imshow(canvas, origin="upper", cmap="gray")
     plt.tight_layout()
     plt.show()
 
