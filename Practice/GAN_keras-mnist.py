@@ -1,6 +1,6 @@
 
 import os
-os.environ["THEANO_FLAGS"] = "mode=FAST_RUN, device=gpu0, floatX=float32, lib.cnmem=0.2"
+os.environ["THEANO_FLAGS"] = "mode=FAST_RUN, device=gpu1, floatX=float32, lib.cnmem=0.2"
 os.environ["KERAS_BACKEND"] = "theano"
 
 from keras.models import Sequential
@@ -169,7 +169,7 @@ def generate(batch_size=128,
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", type=str, default="samples/")
+    parser.add_argument("--path", type=str, default="mnist_samples/")
     parser.add_argument("--batch", type=int, default=256)
 
     #parser.set_defaults(path="samples/")
@@ -180,5 +180,7 @@ def get_args():
 if __name__ == "__main__":
     args = get_args()
     save_path = args.path
+    if save_path[-1] != '/':
+        save_path += '/'
     train(batch_size=256, epoch_size=10, save_path=save_path,
-          lr_G=0.0005, lr_D=0.0005, lr_GD=0.0005, D_epoch=5)
+          lr_G=0.0005, lr_D=0.0005, lr_GD=0.0005, D_epoch=3)
