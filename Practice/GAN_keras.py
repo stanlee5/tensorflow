@@ -1,6 +1,6 @@
 
 import os
-os.environ["THEANO_FLAGS"] = "mode=FAST_RUN, device=gpu1, floatX=float32, lib.cnmem=0.2"
+os.environ["THEANO_FLAGS"] = "mode=FAST_RUN, device=gpu0, floatX=float32, lib.cnmem=0.2"
 os.environ["KERAS_BACKEND"] = "theano"
 
 from keras.models import Sequential
