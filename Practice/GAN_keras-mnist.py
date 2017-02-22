@@ -156,15 +156,8 @@ def train(batch_size=128, epoch_size=30, noise_dim=100,
                 Image.fromarray(image.astype(np.uint8)).save(
                     save_path+str(epoch)+"-"+str(batch)+".png")
 
-        G.save_weights('kerasVer/g_weight', overwrite=True)
-        D.save_weights('kerasVer/d_weight', overwrite=True)
-
-def generate(batch_size=128,
-             noise_dim=100):
-    G = generator_model()
-    g_opt = adam(lr=0.0002)
-    G.compile(loss='binary_crossentropy', optimizer=g_opt)
-    G.load_weights('kerasVer/g_weight')
+        G.save_weights(save_path+'g_weight', overwrite=True)
+        D.save_weights(save_path+'d_weight', overwrite=True)
 
 
 def get_args():
