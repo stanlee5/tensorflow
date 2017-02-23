@@ -1,11 +1,14 @@
 
 import os
-os.environ["THEANO_FLAGS"] = "mode=FAST_RUN, device=gpu1, floatX=float32, lib.cnmem=0.2"
+os.environ["THEANO_FLAGS"] = "mode=FAST_RUN, device=gpu1, floatX=float32, lib.cnmem=0.3"
 os.environ["KERAS_BACKEND"] = "theano"
+# or run like following example
+# THEANO_FLAGS='floatX=float32, device=gpu0, lib.cnmem=0.3' KERAS_BACKEND='theano' python
 
 from keras.models import Sequential
 from keras.layers import BatchNormalization, Reshape
 from keras.layers.core import Activation, Dense, Flatten
+from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import Convolution2D, MaxPooling2D, UpSampling2D
 from keras.optimizers import adam, SGD
 
@@ -13,28 +16,35 @@ from keras.datasets import mnist
 
 from PIL import Image
 
+import time as T
 import numpy as np
 import math, argparse
 
+startTime = T.time()
+
+def pastTime():
+    return round(T.time()-startTime, 2)
 
 # for MNIST Case
-
 def discriminator_model():
     model = Sequential()
     model.add(Convolution2D(
         64, 5, 5,
         border_mode='same',
         input_shape=(1, 28, 28)))
-    model.add(Activation('tanh'))
+    model.add(LeakyReLU(0.2))
+    #model.add(Activation('tanh'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Convolution2D(128, 5, 5))
-    model.add(Activation('tanh'))
+    model.add(LeakyReLU(0.2))
+    #model.add(Activation('tanh'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Flatten())
     model.add(Dense(1024))
-    model.add(Activation('tanh'))
+    model.add(LeakyReLU(0.2))
+    #model.add(Activation('tanh'))
 
     model.add(Dense(1))
     model.add(Activation('sigmoid'))
@@ -48,20 +58,21 @@ def generator_model():
 
     model.add(Dense(128*7*7))
     model.add(BatchNormalization())
-    model.add(Activation('tanh'))
+    #model.add(Activation('tanh'))
+    model.add(LeakyReLU(0.2))
 
     model.add(Reshape((128, 7, 7), input_shape=(128*7*7, )))
     model.add(UpSampling2D(size=(2, 2)))
 
     model.add(Convolution2D(64, 5, 5, border_mode='same'))
-    model.add(Activation('tanh'))
+    #model.add(Activation('tanh'))
+    model.add(LeakyReLU(0.2))
     model.add(UpSampling2D(size=(2, 2)))
 
     model.add(Convolution2D(1, 5, 5, border_mode='same'))
     model.add(Activation('tanh'))
     return model
 
-    return model
 
 def generator_discriminator(generator, discriminator):
     model = Sequential()
@@ -123,6 +134,8 @@ def train(batch_size=128, epoch_size=30, noise_dim=100,
     print("- G-D connection: {}".format(lr_GD))
     print("D-epoch: {}".format(D_epoch))
     print("Save path: {}".format(save_path))
+    print("start training......")
+    startTime = T.time()
 
     noise = np.zeros((batch_size, noise_dim))
     for epoch in xrange(epoch_size):
@@ -140,16 +153,16 @@ def train(batch_size=128, epoch_size=30, noise_dim=100,
             D.trainable = True
             for depoch in xrange(D_epoch):
                 d_loss = D.train_on_batch(x,y)
-            print ("-batch {}: d_loss : {}".format(batch, d_loss))
+            print ("-ep {}: batch {}: d_loss : {} : {}".format(epoch, batch, d_loss, pastTime()))
 
             for i in xrange(batch_size):
                 noise[i, :] = np.random.uniform(-1, 1, noise_dim)
             D.trainable = False
             g_loss = GD.train_on_batch(noise, [1]*batch_size)
-            print("-batch {}: g_loss : {}".format(batch, g_loss))
+            print("-ep {}: batch {}: g_loss : {}".format(epoch, batch, g_loss))
 
             # Write generate images
-            if (epoch < 10 and batch%10==0) or batch%50==0:
+            if (epoch < 10 and batch%10==0) or batch%100==0:
                 image = merge_image(fake_img)
                 image = image*127.5 + 127.5
                 # convert into 0~255
@@ -175,5 +188,5 @@ if __name__ == "__main__":
     save_path = args.path
     if save_path[-1] != '/':
         save_path += '/'
-    train(batch_size=256, epoch_size=10, save_path=save_path,
+    train(batch_size=256, epoch_size=100, save_path=save_path,
           lr_G=0.0005, lr_D=0.0005, lr_GD=0.0005, D_epoch=3)
